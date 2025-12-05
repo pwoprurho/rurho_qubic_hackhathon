@@ -1,0 +1,13 @@
+# requirements.txt for Qubic Agent C++ Generator (Q-Gen)
+# Use Python 3.9+
+
+# --- Application Core ---
+fastapi                     # High-performance web framework for the API endpoint
+uvicorn[standard]           # ASGI server to run FastAPI
+pydantic                    # Data validation/settings management (used by FastAPI)
+
+# --- AI Core ---
+google-generativeai         # SDK for interacting with the Gemini model
+
+# --- Utilities ---
+python-dotenv               # For loading environment variables (API keys) from the .env file

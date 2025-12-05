@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-Gen: Qubic Smart Contract Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        .container-bg {
+            background: linear-gradient(145deg, #ffffff, #e6e9f0);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .code-block {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .pulse-loader {
+            border-top-color: #0d9488;
+            -webkit-animation: spin 1s ease-in-out infinite;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto container-bg rounded-xl p-6 md:p-10">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-gray-800">Q-Gen <span class="text-teal-600">Agent</span></h1>
+            <p class="text-lg text-gray-600 mt-2">Generate, Audit, and Commit Qubic Smart Contracts Instantly.</p>
+        </header>
+
+        <div class="flex justify-center mb-6">
+            <button id="mode_generate" class="mode-btn px-6 py-2 rounded-l-lg font-semibold transition duration-150 border-r-0 bg-teal-600 text-white">
+                1. Code Generation
+            </button>
+            <button id="mode_scan" class="mode-btn px-6 py-2 rounded-r-lg font-semibold transition duration-150 border border-teal-600 text-teal-600 bg-white hover:bg-teal-50">
+                2. Code Scanning & Audit
+            </button>
+        </div>
+
+        <div class="mb-8 p-6 bg-white rounded-lg shadow-inner">
+            
+            <div id="generation_fields">
+                <label for="user_prompt" class="block text-lg font-medium text-gray-700 mb-3">Describe Your Smart Contract Idea:</label>
+                <textarea id="user_prompt" rows="4" 
+                        class="w-full p-4 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-gray-800"
+                        placeholder="e.g., Generate a simple escrow contract that locks 100 QUBIC until a specific date and requires two signatures for release."></textarea>
+            </div>
+
+            <div id="scanning_fields" class="hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <label for="contract_code" class="block text-lg font-medium text-gray-700">Paste/Upload C++ Code to Audit:</label>
+                    <div class="flex items-center space-x-3">
+                        <label for="report_language" class="text-sm font-medium text-gray-700">Report Language:</label>
+                        
+                        <select id="report_language" class="p-2 border border-gray-300 rounded-lg text-gray-800">
+                            <option value="en">English (en)</option>
+                            <option value="es">Spanish (es)</option>
+                            <option value="fr">French (fr)</option>
+                            <option value="de">German (de)</option>
+                            <option value="pt">Portuguese (pt)</option>
+                            <option value="it">Italian (it)</option>
+                            <option value="ru">Russian (ru)</option>
+
+                            <option value="ar">Arabic (ar)</option>
+                            <option value="ha">Hausa (ha)</option>
+                            <option value="ig">Igbo (ig)</option>
+                            <option value="yo">Yoruba (yo)</option>
+                            <option value="zu">Zulu (zu)</option>
+                            <option value="sw">Swahili (sw)</option>
+                            <option value="am">Amharic (am)</option>
+                            <option value="af">Afrikaans (af)</option>
+                            <option value="ln">Lingala (ln)</option>
+                            <option value="sn">Shona (sn)</option>
+                            <option value="st">Sesotho (st)</option>
+                            <option value="so">Somali (so)</option>
+
+                            <option value="zh">Mandarin (Chinese - zh)</option>
+                            <option value="hi">Hindi (hi)</option>
+                            <option value="fa">Persian (Farsi - fa)</option>
+                            <option value="ja">Japanese (ja)</option>
+                            <option value="ko">Korean (ko)</option>
+                            <option value="ur">Urdu (ur)</option>
+                            <option value="bn">Bengali (bn)</option>
+                            <option value="pa">Punjabi (pa)</option>
+                            <option value="gu">Gujarati (gu)</option>
+                            <option value="ta">Tamil (ta)</option>
+                            <option value="te">Telugu (te)</option>
+                            <option value="mr">Marathi (mr)</option>
+                            <option value="th">Thai (th)</option>
+                            <option value="vi">Vietnamese (vi)</option>
+                            <option value="id">Indonesian (id)</option>
+                            <option value="ml">Malayalam (ml)</option>
+                            <option value="tl">Tagalog (tl)</option>
+
+                            <option value="pl">Polish (pl)</option>
+                            <option value="nl">Dutch (nl)</option>
+                            <option value="sv">Swedish (sv)</option>
+                            <option value="tr">Turkish (tr)</option>
+                            <option value="uk">Ukrainian (uk)</option>
+                            <option value="el">Greek (el)</option>
+                            <option value="he">Hebrew (he)</option>
+                            <option value="hu">Hungarian (hu)</option>
+                            <option value="cs">Czech (cs)</option>
+                            <option value="ro">Romanian (ro)</option>
+                            <option value="da">Danish (da)</option>
+                            <option value="fi">Finnish (fi)</option>
+                            <option value="no">Norwegian (no)</option>
+                            <option value="et">Estonian (et)</option>
+                            <option value="lv">Latvian (lv)</option>
+                            <option value="lt">Lithuanian (lt)</option>
+                            <option value="bs">Bosnian (bs)</option>
+                            <option value="hr">Croatian (hr)</option>
+                            <option value="sk">Slovak (sk)</option>
+                            <option value="sl">Slovenian (sl)</option>
+                            <option value="cy">Welsh (cy)</option>
+                        </select>
+                    </div>
+                </div>
+                <textarea id="contract_code" rows="8" 
+                        class="w-full p-4 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-gray-800 font-mono"
+                        placeholder="// Paste your raw Qubic C++ code here..."></textarea>
+                <input type="file" id="code_file_upload" accept=".cpp, .h, .txt" class="mt-2 text-sm text-gray-500">
+            </div>
+
+            <button id="process_btn" 
+                    class="mt-4 w-full px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition duration-150 shadow-lg disabled:bg-gray-400">
+                Generate Code & Audit (gemini-2.5-flash-lite)
+            </button>
+        </div>
+
+        <div id="status_message" class="mb-6 p-4 text-sm rounded-lg text-center font-medium hidden" role="alert"></div>
+
+        <div id="results_container" class="space-y-8 hidden">
+
+            <div class="p-6 bg-yellow-50 rounded-lg border border-yellow-200">
+                <h2 class="text-xl font-semibold text-yellow-700 mb-3 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-7.618 3.04A12.023 12.023 0 002 12c0 3.072 1.884 5.757 4.547 7.771l2.571-2.57C8.423 16.592 8 14.382 8 12c0-4.418 3.582-8 8-8s8 3.582 8 8c0 2.382-.423 4.592-1.282 6.002l2.571 2.573C22.116 17.757 24 15.072 24 12c0-5.185-3.08-9.67-7.382-11.016z"></path></svg>
+                    Commitment Fingerprint
+                </h2>
+                <p class="text-gray-700">The audit log for this operation has been immutably recorded on the mock Qubic Ledger.</p>
+                <div class="mt-3 p-3 bg-yellow-100 rounded-lg flex justify-between items-center break-all">
+                    <span id="tx_id" class="font-mono text-sm font-bold text-yellow-800"></span>
+                    <button onclick="copyToClipboard('tx_id')" class="ml-4 text-yellow-600 hover:text-yellow-900 transition duration-150">Copy</button>
+                </div>
+            </div>
+
+            <div id="cpp_output_section">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-3 flex justify-between items-center">
+                    Generated C++ Smart Contract
+                    <button onclick="copyToClipboard('cpp_code')" class="text-sm px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition duration-150">Copy Code</button>
+                </h2>
+                <pre id="cpp_code" class="code-block"></pre>
+            </div>
+            
+            <div id="hash_display" class="p-4 bg-gray-100 rounded-lg text-sm text-gray-700">
+                <p class="font-bold">Code Hash (SHA-256):</p>
+                <span id="code_hash_value" class="font-mono text-xs break-all"></span>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-3">Security & Compliance Audit Report</h2>
+                <div class="p-4 bg-gray-100 rounded-lg">
+                    <details class="mb-2">
+                        <summary class="font-medium cursor-pointer text-gray-700 hover:text-teal-600 transition duration-150">
+                            View Structured JSON Report
+                        </summary>
+                        <pre id="audit_json" class="code-block !bg-gray-700 !text-white text-xs mt-2 overflow-auto"></pre>
+                    </details>
+                    <div id="audit_summary" class="mt-4 space-y-2 text-sm text-gray-700">
+                        </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Set the API endpoint for your FastAPI backend
+        const API_URL = "http://127.0.0.1:8001/generate";
+        
+        // Mode State
+        let currentMode = 'GENERATION'; 
+
+        // DOM Elements
+        const promptInput = document.getElementById('user_prompt');
+        const contractCode = document.getElementById('contract_code');
+        const reportLanguage = document.getElementById('report_language');
+        const codeFileUpload = document.getElementById('code_file_upload');
+        const processBtn = document.getElementById('process_btn');
+        const statusMessage = document.getElementById('status_message');
+        const resultsContainer = document.getElementById('results_container');
+        const cppCode = document.getElementById('cpp_code');
+        const auditJson = document.getElementById('audit_json');
+        const auditSummary = document.getElementById('audit_summary');
+        const txId = document.getElementById('tx_id');
+        const cppOutputSection = document.getElementById('cpp_output_section');
+        const hashDisplayValue = document.getElementById('code_hash_value');
+        
+        const modeGenerateBtn = document.getElementById('mode_generate');
+        const modeScanBtn = document.getElementById('mode_scan');
+        const generationFields = document.getElementById('generation_fields');
+        const scanningFields = document.getElementById('scanning_fields');
+
+        // --- UI Utility Functions ---
+        function showStatus(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800', 'bg-blue-100', 'text-blue-800');
+            
+            if (type === 'error') {
+                statusMessage.classList.add('bg-red-100', 'text-red-800');
+            } else if (type === 'success') {
+                statusMessage.classList.add('bg-green-100', 'text-green-800');
+            } else { // info/loading
+                statusMessage.classList.add('bg-blue-100', 'text-blue-800');
+            }
+        }
+
+        function clearResults() {
+            resultsContainer.classList.add('hidden');
+            cppCode.textContent = '';
+            auditJson.textContent = '';
+            auditSummary.innerHTML = '';
+            txId.textContent = '';
+            hashDisplayValue.textContent = '';
+            statusMessage.classList.add('hidden');
+        }
+
+        function updateUIForMode(mode) {
+            currentMode = mode;
+            clearResults();
+
+            if (mode === 'GENERATION') {
+                // Button styles
+                modeGenerateBtn.classList.remove('bg-white', 'text-teal-600', 'border-teal-600');
+                modeGenerateBtn.classList.add('bg-teal-600', 'text-white', 'border-0');
+                modeScanBtn.classList.add('bg-white', 'text-teal-600', 'border-teal-600');
+                modeScanBtn.classList.remove('bg-teal-600', 'text-white', 'border-0');
+
+                // Input fields
+                generationFields.classList.remove('hidden');
+                scanningFields.classList.add('hidden');
+                cppOutputSection.classList.remove('hidden');
+
+                // Button text
+                processBtn.textContent = 'Generate Code & Audit (gemini-2.5-flash-lite)';
+                showStatus("Ready to generate your first contract. Enter a detailed prompt and click 'Generate'.", 'info');
+            } else { // SCANNING
+                // Button styles
+                modeScanBtn.classList.remove('bg-white', 'text-teal-600', 'border-teal-600');
+                modeScanBtn.classList.add('bg-teal-600', 'text-white', 'border-0');
+                modeGenerateBtn.classList.add('bg-white', 'text-teal-600', 'border-teal-600');
+                modeGenerateBtn.classList.remove('bg-teal-600', 'text-white', 'border-0');
+                
+                // Input fields
+                scanningFields.classList.remove('hidden');
+                generationFields.classList.add('hidden');
+                cppOutputSection.classList.add('hidden');
+
+                // Button text
+                processBtn.textContent = 'Scan Code, Audit & Translate (gemini-2.5-flash-lite)';
+                showStatus("Ready to audit existing C++ code. Paste code or upload a file and select the report language.", 'info');
+            }
+        }
+
+
+        // --- Core Logic ---
+        async function processContract() {
+            let payload = { client_ref_id: "POC-HACKATHON-2025" };
+            
+            if (currentMode === 'GENERATION') {
+                const userPrompt = promptInput.value.trim();
+                if (!userPrompt) {
+                    showStatus("Please enter a contract description.", 'error');
+                    return;
+                }
+                payload.user_prompt = userPrompt;
+            } else { // SCANNING
+                const code = contractCode.value.trim();
+                const language = reportLanguage.value;
+                if (!code) {
+                    showStatus("Please paste or upload C++ code to scan.", 'error');
+                    return;
+                }
+                payload.contract_code = code;
+                payload.report_language = language;
+            }
+
+            clearResults();
+            processBtn.disabled = true;
+            processBtn.innerHTML = `
+                <div class="pulse-loader h-5 w-5 border-4 border-t-4 border-gray-100 rounded-full inline-block mr-2"></div>
+                ${currentMode === 'GENERATION' ? 'Generating and Auditing...' : 'Scanning and Translating...'}
+            `;
+            showStatus(`Sending request to Q-Gen API in ${currentMode} mode...`, 'info');
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                let result;
+                try {
+                    result = await response.json();
+                } catch (jsonError) {
+                    console.error("JSON Parsing Error:", jsonError);
+                    throw new Error(`Server returned ${response.status} but response was not valid JSON.`);
+                }
+
+                if (!response.ok) {
+                    const detail = result.detail || 'Unknown error occurred.';
+                    throw new Error(`API Error (${response.status}): ${detail}`);
+                }
+
+                // Display Results
+                txId.textContent = result.qubic_transaction_id;
+                hashDisplayValue.textContent = result.code_hash;
+
+                // Handle GENERATION specific output
+                if (result.mode === 'GENERATION') {
+                    cppCode.textContent = result.generated_code;
+                    cppOutputSection.classList.remove('hidden');
+                } else {
+                    cppOutputSection.classList.add('hidden');
+                }
+
+                // Pretty print JSON
+                auditJson.textContent = JSON.stringify(result.security_audit, null, 2);
+
+                // Build a quick human-readable summary
+                const audit = result.security_audit;
+                const modeLabel = result.mode === 'GENERATION' ? 'Generated Contract ID' : 'Scan Report ID';
+                const langLabel = result.mode === 'SCANNING' ? `(${audit.report_language.toUpperCase()})` : '';
+
+                const summaryHtml = `
+                    <p class="font-bold text-lg text-gray-800">Quick Summary ${langLabel}</p>
+                    <p><strong>${modeLabel}:</strong> <span class="text-teal-600">${audit.contract_id}</span></p>
+                    <p><strong>Type:</strong> ${audit.contract_type}</p>
+                    <p><strong>Estimated Gas Cost:</strong> <span class="font-bold text-blue-600">${audit.security_audit.gas_cost_estimate}</span></p>
+                    <p><strong>QBC Compliant:</strong> <span class="${audit.security_audit.is_qbc_compliant ? 'text-green-600' : 'text-red-600'} font-bold">${audit.security_audit.is_qbc_compliant ? 'YES' : 'NO'}</span></p>
+                    <p><strong>Vulnerabilities:</strong></p>
+                    <ul class="list-disc list-inside ml-4 space-y-1">
+                        ${audit.security_audit.vulnerabilities_detected.map(v => 
+                            `<li class="${v.type.includes('None') ? 'text-green-600' : 'text-red-600'}"><strong>${v.type}:</strong> ${v.detail} (Confidence: ${v.confidence.toFixed(2)})</li>`
+                        ).join('')}
+                    </ul>
+                    <p class="mt-3"><strong>Agent Note:</strong> <em>${audit.agent_note}</em></p>
+                `;
+                auditSummary.innerHTML = summaryHtml;
+
+
+                resultsContainer.classList.remove('hidden');
+                showStatus(`✅ Success! ${result.mode} operation completed in ${result.duration_seconds} seconds.`, 'success');
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                showStatus(`❌ Operation Failed: ${error.message}`, 'error');
+            } finally {
+                processBtn.disabled = false;
+                processBtn.innerHTML = currentMode === 'GENERATION' 
+                    ? 'Generate Code & Audit (gemini-2.5-flash-lite)' 
+                    : 'Scan Code, Audit & Translate (gemini-2.5-flash-lite)';
+            }
+        }
+
+        // --- Utility function for Copying to Clipboard ---
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            let textToCopy;
+
+            if (element.tagName === 'PRE') {
+                textToCopy = element.textContent;
+            } else {
+                textToCopy = element.innerText;
+            }
+
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                showStatus(`Copied ${elementId.replace('_', ' ').toUpperCase()} to clipboard!`, 'info');
+            } catch (err) {
+                showStatus(`Failed to copy: ${err}`, 'error');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // --- Event Listeners Setup ---
+        processBtn.addEventListener('click', processContract);
+        modeGenerateBtn.addEventListener('click', () => updateUIForMode('GENERATION'));
+        modeScanBtn.addEventListener('click', () => updateUIForMode('SCANNING'));
+        
+        // File Upload Handler (for scanning mode)
+        codeFileUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                showStatus("No file selected.", 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                // CRITICAL: Set the textarea value
+                contractCode.value = e.target.result;
+                showStatus(`✅ File loaded: ${file.name}. Code ready to scan.`, 'success');
+            };
+            reader.onerror = (e) => {
+                showStatus(`❌ Error reading file: ${file.name}. Please paste the content instead.`, 'error');
+                contractCode.value = '';
+            };
+            
+            // Explicitly handle large file size or other errors before reading
+            if (file.size > 5242880) { // 5MB limit
+                showStatus("❌ File too large (max 5MB). Please reduce the size or paste the code.", 'error');
+                contractCode.value = '';
+                return;
+            }
+
+            reader.readAsText(file);
+        });
+
+
+        // Initial state
+        updateUIForMode('GENERATION');
+    </script>
+</body>
+</html>
