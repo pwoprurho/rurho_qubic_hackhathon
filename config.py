@@ -24,7 +24,7 @@ print(f"📂 Output directory set to: {OUTPUT_DIR}")
 
 # --- Load API Key Pool (NEW) ---
 print("🔑 Loading API Key Pool from .env file...")
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / ".env", override=True)
 
 API_KEY_POOL = []
 # Load all keys starting with GEMINI_API_KEY_...
@@ -37,10 +37,7 @@ for i in range(1, 10):  # Will check for keys 1 through 9
 if not API_KEY_POOL:
     key = os.getenv("GEMINI_API_KEY") # Check for the old single key
     if key:
-        API_KEY_POOL.append(key)
-    else:
-        # Placeholder key as per previous snippet for demonstration purposes
-        API_KEY_POOL.append("AIzaSyDBTJjpYAmoJOe5aa9J3RvI10-XNtBnoIU") 
+        API_KEY_POOL.append(key) 
 
 if not API_KEY_POOL:
     print("❌ FATAL: GEMINI_API_KEY missing in .env. Please check your config.")
