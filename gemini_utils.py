@@ -1,6 +1,7 @@
 # gemini_utils.py
 """
 DEBUG VERSION: Forces Raw Output to Terminal and UI.
+Updated to track and log AI block reasons and API errors during retries.
 """
 
 import sys
@@ -36,7 +37,6 @@ CURRENT_KEY = next(KEY_ITERATOR)
 model_client = None
 
 # --- OVERRIDE SAFETY SETTINGS (MAX PERMISSIVE) ---
-# This ensures we get an answer even if the AI thinks code is "dangerous"
 DEBUG_SAFETY_SETTINGS = {
     HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
     HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
@@ -106,7 +106,6 @@ def parse_qubic_dual_output(response_text: str):
     except: pass
 
     # 3. DEBUG PASSTHROUGH (The "Show Me The Raw Output" Layer)
-    # If we can't parse it, we return the RAW TEXT as the "Code" so you can see it in the UI.
     print("⚠️ Parsing failed. Returning RAW OUTPUT to UI.")
     return {
         "code": f"// --- RAW UNPARSED OUTPUT ---\n// The parser failed, but here is what the AI said:\n\n{response_text}",
@@ -132,12 +131,33 @@ def generate_code_and_audit(user_prompt: str, retries: int = 3):
     if not client: return None
 
     combined_prompt = f"{SYSTEM_PROMPT}\n\nUSER REQUEST: {user_prompt}"
+    
+    # Store the last failure reason
+    last_error_log = "// Unknown error occurred across all retries."
 
     for attempt in range(retries):
         try:
             print(f"\n🔮 Sending Request (Attempt {attempt+1})...")
             response = client.generate_content(combined_prompt)
             
+            # --- NEW CHECK: Check for Blocked Content (Success but Blocked) ---
+            if not response.text and response.candidates:
+                block_reason = getattr(response.prompt_feedback, 'block_reason', 'N/A')
+                safety_ratings = getattr(response.prompt_feedback, 'safety_ratings', [])
+                
+                block_message = f"AI Blocked. Reason: {block_reason} | Ratings: "
+                block_message += ", ".join([f"{r.category.name}:{r.probability.name}" for r in safety_ratings])
+                
+                print(f"🛑 WARNING: {block_message}")
+                last_error_log = f"// Blocked: {block_message}"
+                
+                # If blocked, we check for rate limiting and retry 
+                if "429" in block_message or "exhausted" in block_message:
+                    if rotate_client_and_key(): continue
+                time.sleep(1)
+                continue # Move to next attempt
+            # -------------------------------------------------------------
+
             # --- DEBUG: PRINT RAW RESPONSE TO TERMINAL ---
             print("="*40)
             print(f"RAW AI RESPONSE ({len(response.text)} chars):")
@@ -146,28 +166,52 @@ def generate_code_and_audit(user_prompt: str, retries: int = 3):
             # ---------------------------------------------
 
             parsed = parse_qubic_dual_output(response.text)
+            
+            # If parsing fails, the raw output is embedded in the 'code' field and returned.
             if parsed: return parsed
 
         except Exception as e:
             err = str(e)
             print(f"🛑 Error: {err}")
+            last_error_log = f"// API Error: {err}"
+            
             if "429" in err or "exhausted" in err:
                 if rotate_client_and_key(): continue
             time.sleep(1)
             
+    # Final return after all retries fail, includes the last error log
     return {
-        "code": "// Error: AI failed to respond or was blocked.",
+        "code": f"// Error: AI failed to respond or was blocked.\n{last_error_log}",
         "json": ensure_json_structure({"contract_id": "ERR-NO-RESPONSE"})
     }
 
 def perform_code_scan(contract_code: str, report_language: str, retries: int = 3):
-    # Same logic for scanning
     client = get_gemini_client()
     prompt = f"{SYSTEM_PROMPT_SCAN}\n\nCODE:\n{contract_code}\nLANG: {report_language}"
+    
+    last_error_log = "// Unknown error occurred across all retries."
 
     for attempt in range(retries):
         try:
+            print(f"\n🔍 Sending Scan Request (Attempt {attempt+1})...")
             response = client.generate_content(prompt)
+            
+            # --- NEW CHECK: Check for Blocked Content (Success but Blocked) ---
+            if not response.text and response.candidates:
+                block_reason = getattr(response.prompt_feedback, 'block_reason', 'N/A')
+                safety_ratings = getattr(response.prompt_feedback, 'safety_ratings', [])
+                
+                block_message = f"AI Blocked. Reason: {block_reason} | Ratings: "
+                block_message += ", ".join([f"{r.category.name}:{r.probability.name}" for r in safety_ratings])
+                
+                print(f"🛑 WARNING: {block_message}")
+                last_error_log = f"// Blocked: {block_message}"
+                if "429" in block_message or "exhausted" in block_message:
+                    if rotate_client_and_key(): continue
+                time.sleep(1)
+                continue
+            # -------------------------------------------------------------
+
             print(f"RAW SCAN RESPONSE:\n{response.text}") # Debug print
             
             # Try parse, else return raw
@@ -176,15 +220,27 @@ def perform_code_scan(contract_code: str, report_language: str, retries: int = 3
                 j_end = response.text.rfind('}')
                 if j_start != -1 and j_end != -1:
                     return ensure_json_structure(json.loads(response.text[j_start:j_end+1]))
-            except: pass
+            except Exception as parse_e: 
+                print(f"⚠️ Parsing Scan Output Failed: {parse_e}")
+                pass 
             
-            # Fallback for scan
+            # Fallback for scan (returns raw output if parsing failed)
             return ensure_json_structure({
                 "contract_id": "RAW-SCAN-OUTPUT",
                 "agent_note": f"Raw output: {response.text[:200]}..."
             })
-        except Exception as e:
-            print(f"Error: {e}")
-            if rotate_client_and_key(): continue
             
-    return ensure_json_structure({"contract_id": "ERR-SCAN-FAILED"})
+        except Exception as e:
+            err = str(e)
+            print(f"🛑 Error: {err}")
+            last_error_log = f"// API Error: {err}"
+
+            if "429" in err or "exhausted" in err:
+                if rotate_client_and_key(): continue
+            time.sleep(1)
+            
+    # Final return after all retries fail, includes the last error log
+    return ensure_json_structure({
+        "contract_id": "ERR-SCAN-FAILED",
+        "agent_note": f"AI failed to respond or was blocked after retries. Last known error: {last_error_log}"
+    })
