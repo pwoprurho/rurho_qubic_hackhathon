@@ -46,7 +46,7 @@ print(f"🔑 API Key Pool loaded successfully. ({len(API_KEY_POOL)} key(s) avail
 
 
 # --- Q-Gen Configuration ---
-GEMINI_MODEL_NAME = "gemini-2.5-flash-lite" 
+GEMINI_MODEL_NAME = "gemini-2.5-flash" 
 # --- System Prompt Files ---
 SYSTEM_PROMPT_QGEN_FILE = BASE_DIR / "system_prompt_qgen.txt" 
 SYSTEM_PROMPT_SCAN_FILE = BASE_DIR / "system_prompt_scan.txt" # NEW SCANNING PROMPT
